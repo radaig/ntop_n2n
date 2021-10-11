@@ -72,7 +72,9 @@ jobs:
 
     - name: Check space usage
       if: (!cancelled())
-      run: df -hT
+      run: |
+        df -hT
+        ls n2n
 
     - name: Upload
       uses: softprops/action-gh-release@v1
