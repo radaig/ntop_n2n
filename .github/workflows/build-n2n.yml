@@ -52,13 +52,6 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
-    - name: Start SSH Server
-      if: ${{ failure() }}
-      env:
-        NPC_TOKEN: ${{ secrets.NPC_TOKEN }}
-        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
-      run: |
-        chmod +x ./sshd.sh &&  ./sshd.sh
  
     - name: Clone source code
       working-directory: /workdir
@@ -75,68 +68,29 @@ jobs:
         ./autogen.sh
         ./configure
         make
-        mkdir target && cp src/supernode  target/supernode && cp src/edge  target/edge
         echo "::set-output name=status::success"
-        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
 
     - name: Check space usage
       if: (!cancelled())
       run: df -hT
 
-    - name: Upload bin directory
-      uses: actions/upload-artifact@main
-      if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
-      with:
-        name: N2N_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: n2n/bin
-
-    - name: Organize files
-      id: organize
-      if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
-      run: |
-        cd n2n/target
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
-
-    - name: Upload firmware directory
-      uses: actions/upload-artifact@main
-      if: steps.organize.outputs.status == 'success' && !cancelled()
-      with:
-        name: N2N_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-        path: ${{ env.FIRMWARE }}
-
-    - name: Generate release tag
-      id: tag
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      run: |
-        echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
-        touch release.txt
-        echo "::set-output name=status::success"
-
-    - name: Upload firmware to release
+    - name: Upload
       uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          supernode
+          edge
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
-        files: ${{ env.FIRMWARE }}/*
 
-    - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 3
-
-    - name: Remove old Releases
-      uses: dev-drprasad/delete-older-releases@v0.1.0
-      if: env.UPLOAD_RELEASE == 'true' && !cancelled()
-      with:
-        keep_latest: 3
-        delete_tags: true
+    - name: Start SSH Server
+      if: ${{ failure() }}
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPC_TOKEN: ${{ secrets.NPC_TOKEN }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      run: |
+        chmod +x ./sshd.sh &&  ./sshd.sh
 
     - name: Sleep
       if: ${{ failure() }}
