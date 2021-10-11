@@ -118,7 +118,4 @@ jobs:
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
         chmod +x ./sshd.sh &&  ./sshd.sh
-
-    - name: Sleep
-      if: ${{ failure() }}
-      run: sleep 1h || ls
+        sleep 1h
