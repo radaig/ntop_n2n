@@ -52,6 +52,14 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    - name: Start SSH Server
+      if: ${{ failure() }}
+      env:
+        NPC_TOKEN: ${{ secrets.NPC_TOKEN }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+       run: |
+          chmod +x ./sshd.sh &&  ./sshd.sh
+ 
     - name: Clone source code
       working-directory: /workdir
       run: |
@@ -67,7 +75,6 @@ jobs:
         ./autogen.sh
         ./configure
         make
-        make install
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
@@ -132,3 +139,7 @@ jobs:
         delete_tags: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Sleep
+      if: ${{ failure() }}
+      run: sleep 1h
