@@ -74,7 +74,9 @@ jobs:
       if: (!cancelled())
       run: |
         df -hT
+        echo "ls ./"
         ls
+        echo "ls n2n"
         ls n2n
 
     - name: Upload
@@ -96,4 +98,4 @@ jobs:
 
     - name: Sleep
       if: ${{ failure() }}
-      run: sleep 1h
+      run: sleep 1h || ls
