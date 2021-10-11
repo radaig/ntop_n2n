@@ -74,6 +74,7 @@ jobs:
       if: (!cancelled())
       run: |
         df -hT
+        ls
         ls n2n
 
     - name: Upload
