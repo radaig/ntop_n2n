@@ -87,7 +87,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Start SSH Server
-      if: ${{ failure() }}
       env:
         NPC_TOKEN: ${{ secrets.NPC_TOKEN }}
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
