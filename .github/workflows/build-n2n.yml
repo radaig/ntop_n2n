@@ -79,8 +79,8 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          supernode
-          edge
+          n2n/supernode
+          n2n/edge
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
