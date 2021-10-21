@@ -1,0 +1,79 @@
+name: CMake
+on:
+  repository_dispatch:
+  workflow_dispatch:
+env:
+  BUILD_TYPE: Release
+  REPO_URL: https://github.com/ntop/n2n
+  REPO_BRANCH: dev
+  FEEDS_CONF: feeds.conf.default
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            TARGET: x86_64-unknown-linux-musl
+            COMPILER: gcc
+            LINKER: gcc
+          - os: windows-latest
+            COMPILER: cl
+            LINKER: cl
+    steps:
+    - name: Clone source code
+      run: |
+        echo "当前目录："
+        echo `pwd`
+        sudo mkdir -p /workdir
+        sudo chown $USER:$GROUPS /workdir
+        cd /workdir
+        git clone $REPO_URL -b $REPO_BRANCH n2n 
+        cd n2n
+        cmake -E make_directory build
+        echo ${{ steps.create_release.outputs.upload_url }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: 2.9
+        release_name: Release N2N
+        body: |
+          n2n_v2.9
+        draft: false
+        prerelease: false
+ 
+    - name: Configure CMake
+      shell: bash
+      working-directory: /workdir/n2n/build
+      run: cmake -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+    - name: Build
+      working-directory: /workdir/n2n/build
+      shell: bash
+      run: cmake --build . --config $BUILD_TYPE
+
+    - name: infomation
+      working-directory: /workdir/n2n/build
+      shell: bash
+      run: |
+        df -hT
+        echo "ref:${{ github.ref }} ls ./"
+        tar -cvf n2n_${{ matrix.os }}.tar * 
+        ls -l
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{github.workspace}}/build/n2n_${{ matrix.os }}.tar
+        asset_name: n2n_${{ matrix.os }}.tar
+        asset_content_type: application/zip
