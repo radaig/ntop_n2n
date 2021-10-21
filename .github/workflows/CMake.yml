@@ -71,6 +71,6 @@ jobs:
       with:
         upload_url: https://uploads.github.com/repos/radaig/ntop_n2n/releases/51763339/{assets?name}
         #upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: /workdir/n2n/n2n_${{ matrix.os }}.tar
+        asset_path: /workdir/n2n/
         asset_name: n2n_${{ matrix.os }}.tar
         asset_content_type: application/zip
