@@ -16,9 +16,7 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            TARGET: x86_64-unknown-linux-musl
-            COMPILER: gcc
-            LINKER: gcc
+          - os: windows-latest
             
     steps:
     #- name: Create Release
